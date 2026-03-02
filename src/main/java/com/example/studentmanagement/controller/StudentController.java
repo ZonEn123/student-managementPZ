@@ -1,5 +1,6 @@
 package com.example.studentmanagement.controller;
 
+import com.example.studentmanagement.common.Result;
 import com.example.studentmanagement.entity.Student;
 import com.example.studentmanagement.repository.StudentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,40 +19,41 @@ public class StudentController {
 
     // 查询所有
     @GetMapping
-    public List<Student> findAll() {
-        return studentRepository.findAll();
+    public Result<List<Student>> findAll() {
+        return Result.success(studentRepository.findAll());
     }
 
-    // 新增（重点：确保 @PostMapping 没写错）
-    @PostMapping
-    public Student create(@RequestBody Student student) {
-        return studentRepository.save(student);
-    }
-
-    // 根据ID查询
+    // 根据id查询
     @GetMapping("/{id}")
-    public ResponseEntity<Student> findById(@PathVariable Long id) {
-        Optional<Student> student = studentRepository.findById(id);
-        return student.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+    public Result<Student> findById(@PathVariable Long id) {
+        return studentRepository.findById(id)
+                .map(Result::success)
+                .orElse(Result.fail("学生不存在"));
+    }
+
+    // 新增
+    @PostMapping
+    public Result<Student> create(@RequestBody Student student) {
+        return Result.success(studentRepository.save(student));
     }
 
     // 修改
     @PutMapping("/{id}")
-    public ResponseEntity<Student> update(@PathVariable Long id, @RequestBody Student student) {
+    public Result<Student> update(@PathVariable Long id, @RequestBody Student student) {
         if (!studentRepository.existsById(id)) {
-            return ResponseEntity.notFound().build();
+            return Result.fail("学生不存在");
         }
         student.setId(id);
-        return ResponseEntity.ok(studentRepository.save(student));
+        return Result.success(studentRepository.save(student));
     }
 
     // 删除
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public Result<String> delete(@PathVariable Long id) {
         if (!studentRepository.existsById(id)) {
-            return ResponseEntity.notFound().build();
+            return Result.fail("学生不存在");
         }
         studentRepository.deleteById(id);
-        return ResponseEntity.noContent().build();
+        return Result.success("删除成功");
     }
 }
